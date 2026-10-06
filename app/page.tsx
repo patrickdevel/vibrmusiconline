@@ -43,10 +43,15 @@ export default function HomePage() {
               <div
                 key={item.id}
                 onClick={() => playTrack(item)}
-                className="bg-surface p-4 rounded-2xl hover:bg-secondary/60 transition group cursor-pointer relative"
+                className="bg-surface p-4 rounded-2xl hover:bg-secondary/60 transition group cursor-pointer relative border border-secondary/20"
               >
                 <div className="relative mb-3 aspect-square rounded-xl overflow-hidden bg-secondary">
-                  <img src={item.thumbnail} alt={item.title} className="w-full h-full object-cover" />
+                  <img
+                    src={item.thumbnail}
+                    alt={item.title}
+                    referrerPolicy="no-referrer"
+                    className="w-full h-full object-cover"
+                  />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
                     <div className="p-3 bg-primary rounded-full text-white shadow-lg">
                       <Play size={20} className="ml-0.5" />
