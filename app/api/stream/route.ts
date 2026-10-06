@@ -20,10 +20,11 @@ export async function GET(request: Request) {
 
   try {
     const yt = await getYouTube();
-    const info = await yt.getBasicInfo(id, 'WEB_REMIX');
+    // getBasicInfo(id) benötigt keinen zweiten String-Parameter
+    const info = await yt.getBasicInfo(id);
     const format = info.chooseFormat({ type: 'audio', quality: 'best' });
 
-    if (!format || !format.decipher(yt.session.player)) {
+    if (!format) {
       return NextResponse.json({ error: 'Stream format not found' }, { status: 404 });
     }
 
