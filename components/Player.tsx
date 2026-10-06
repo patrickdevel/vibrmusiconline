@@ -20,6 +20,7 @@ export const Player = () => {
         <img
           src={currentTrack.thumbnail}
           alt={currentTrack.title}
+          referrerPolicy="no-referrer"
           className="w-14 h-14 rounded-lg object-cover shadow-md"
         />
         <div className="overflow-hidden">
