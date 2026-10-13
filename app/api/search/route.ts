@@ -12,27 +12,26 @@ async function getYouTube() {
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const q = searchParams.get('q');
+  const id = searchParams.get('id');
 
-  if (!q) {
-    return NextResponse.json({ results: [] });
+  if (!id) {
+    return NextResponse.json({ error: 'Missing ID' }, { status: 400 });
   }
 
   try {
     const yt = await getYouTube();
-    const searchResults = await yt.music.search(q, { type: 'song' });
-    
-    const results = searchResults.songs?.contents.map((song: any) => ({
-      id: song.id,
-      title: song.title,
-      artist: song.artists?.[0]?.name || 'Unbekannt',
-      thumbnail: song.thumbnails?.[0]?.url || '',
-      duration: song.duration?.text || '',
-    })) || [];
+    // getBasicInfo(id) benötigt keinen zweiten String-Parameter
+    const info = await yt.getBasicInfo(id);
+    const format = info.chooseFormat({ type: 'audio', quality: 'best' });
 
-    return NextResponse.json({ results });
+    if (!format) {
+      return NextResponse.json({ error: 'Stream format not found' }, { status: 404 });
+    }
+
+    const url = await format.decipher(yt.session.player);
+    return NextResponse.redirect(url);
   } catch (error) {
-    console.error('Search error:', error);
-    return NextResponse.json({ error: 'Search failed' }, { status: 500 });
+    console.error('Stream error:', error);
+    return NextResponse.json({ error: 'Failed to fetch stream' }, { status: 500 });
   }
 }
