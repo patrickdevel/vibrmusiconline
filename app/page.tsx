@@ -9,10 +9,12 @@ interface Section {
   items: Track[];
 }
 
+const KIND_LABEL: Record<string, string> = { video: 'Video', playlist: 'Playlist', album: 'Album', artist: 'Künstler' };
+
 export default function HomePage() {
   const [sections, setSections] = useState<Section[]>([]);
   const [loading, setLoading] = useState(true);
-  const { playTrack } = usePlayer();
+  const { openItem } = usePlayer();
 
   useEffect(() => {
     fetch('/api/home')
@@ -42,7 +44,7 @@ export default function HomePage() {
             {section.items.map((item) => (
               <div
                 key={item.id}
-                onClick={() => playTrack(item)}
+                onClick={() => openItem(item)}
                 className="bg-surface p-4 rounded-2xl hover:bg-secondary/60 transition group cursor-pointer relative border border-secondary/20"
               >
                 <div className="relative mb-3 aspect-square rounded-xl overflow-hidden bg-secondary">
@@ -59,7 +61,10 @@ export default function HomePage() {
                   </div>
                 </div>
                 <p className="font-medium text-white truncate">{item.title}</p>
-                <p className="text-sm text-gray-400 truncate">{item.artist}</p>
+                <p className="text-sm text-gray-400 truncate">
+                  {item.kind && item.kind !== 'song' && <span className="mr-1 uppercase text-xs text-gray-500">{KIND_LABEL[item.kind]} ·</span>}
+                  {item.artist}
+                </p>
               </div>
             ))}
           </div>
