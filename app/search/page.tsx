@@ -4,11 +4,13 @@ import { useState } from 'react';
 import { usePlayer, Track } from '@/context/PlayerContext';
 import { Search as SearchIcon, Play } from 'lucide-react';
 
+const KIND_LABEL: Record<string, string> = { video: 'Video', playlist: 'Playlist', album: 'Album', artist: 'Künstler' };
+
 export default function SearchPage() {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Track[]>([]);
   const [loading, setLoading] = useState(false);
-  const { playTrack } = usePlayer();
+  const { openItem } = usePlayer();
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,14 +49,19 @@ export default function SearchPage() {
         {results.map((track) => (
           <div
             key={track.id}
-            onClick={() => playTrack(track)}
+            onClick={() => openItem(track)}
             className="flex items-center justify-between p-3 rounded-xl hover:bg-surface/80 transition cursor-pointer group"
           >
             <div className="flex items-center gap-4">
-              <img src={track.thumbnail} alt={track.title} className="w-12 h-12 rounded-lg object-cover" />
+              <img src={track.thumbnail} alt={track.title} referrerPolicy="no-referrer" className="w-12 h-12 rounded-lg object-cover" />
               <div>
                 <p className="font-medium text-white">{track.title}</p>
-                <p className="text-sm text-gray-400">{track.artist}</p>
+                <p className="text-sm text-gray-400">
+                  {track.kind && track.kind !== 'song' && (
+                    <span className="mr-2 px-1.5 py-0.5 rounded bg-secondary text-xs uppercase">{KIND_LABEL[track.kind]}</span>
+                  )}
+                  {track.artist}
+                </p>
               </div>
             </div>
             <button className="p-2 bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white rounded-full transition">
