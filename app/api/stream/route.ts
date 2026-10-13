@@ -28,7 +28,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Stream format not found' }, { status: 404 });
     }
 
-    const url = format.decipher(yt.session.player);
+    const url = await format.decipher(yt.session.player);
     return NextResponse.redirect(url);
   } catch (error) {
     console.error('Stream error:', error);
