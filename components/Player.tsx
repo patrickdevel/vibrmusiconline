@@ -1,12 +1,31 @@
 'use client';
 
 import { usePlayer } from '@/context/PlayerContext';
-import { Play, Pause, Volume2 } from 'lucide-react';
+import { useEffect } from 'react';
+import { Play, Pause, Volume2, X } from 'lucide-react';
 
 export const Player = () => {
-  const { currentTrack, isPlaying, togglePlay, progress, duration, seek, volume, setVolume } = usePlayer();
+  const { currentTrack, isPlaying, togglePlay, progress, duration, seek, volume, setVolume, error, setError } = usePlayer();
 
-  if (!currentTrack) return null;
+  useEffect(() => {
+    if (!error) return;
+    const t = setTimeout(() => setError(null), 5000);
+    return () => clearTimeout(t);
+  }, [error, setError]);
+
+  const toast = error ? (
+    <div
+      role="alert"
+      className="fixed bottom-28 left-1/2 -translate-x-1/2 z-[60] flex items-center gap-3 bg-primary text-white px-5 py-3 rounded-xl shadow-lg max-w-md"
+    >
+      <span className="text-sm">{error}</span>
+      <button onClick={() => setError(null)} aria-label="Schließen">
+        <X size={16} />
+      </button>
+    </div>
+  ) : null;
+
+  if (!currentTrack) return toast;
 
   const formatTime = (time: number) => {
     const mins = Math.floor(time / 60);
@@ -15,6 +34,8 @@ export const Player = () => {
   };
 
   return (
+    <>
+    {toast}
     <div className="fixed bottom-0 left-0 right-0 h-24 bg-surface/95 backdrop-blur-md border-t border-secondary/30 px-6 flex items-center justify-between z-50">
       <div className="flex items-center gap-4 w-1/4">
         <img
@@ -64,5 +85,6 @@ export const Player = () => {
         />
       </div>
     </div>
+    </>
   );
 };
