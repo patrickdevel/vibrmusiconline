@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 export interface Track {
   id: string;
@@ -8,12 +9,16 @@ export interface Track {
   artist: string;
   thumbnail: string;
   duration?: string;
+  kind?: 'song' | 'video' | 'playlist' | 'album' | 'artist';
 }
 
 interface PlayerContextType {
   currentTrack: Track | null;
   isPlaying: boolean;
   playTrack: (track: Track) => void;
+  openItem: (item: Track) => void;
+  error: string | null;
+  setError: (msg: string | null) => void;
   togglePlay: () => void;
   audioRef: React.RefObject<HTMLAudioElement>;
   volume: number;
@@ -33,12 +38,37 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [duration, setDuration] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const playTrack = async (track: Track) => {
+  const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
+
+  const playTrack = (track: Track) => {
+    // Videos werden nicht unterstützt – nur Audio-Songs
+    if (track.kind === 'video') {
+      setError('Videos werden nicht unterstützt. Bitte wähle einen Song.');
+      return;
+    }
+    // Playlists, Alben und Künstler sind keine Audiospur
+    if (track.kind && track.kind !== 'song') {
+      setError('Das ist kein einzelner Song und kann nicht direkt abgespielt werden.');
+      return;
+    }
+    setError(null);
     setCurrentTrack(track);
     setIsPlaying(true);
     if (audioRef.current) {
-      audioRef.current.src = `/api/stream?id=${track.id}`;
-      audioRef.current.play().catch(console.error);
+      audioRef.current.src = `/api/stream?id=${encodeURIComponent(track.id)}`;
+      audioRef.current.play().catch((e) => {
+        if (e?.name !== 'AbortError') console.error(e);
+      });
+    }
+  };
+
+  // Playlists/Alben öffnen die Detailseite, Songs werden abgespielt
+  const openItem = (item: Track) => {
+    if (item.kind === 'playlist' || item.kind === 'album') {
+      router.push(`/playlist/${encodeURIComponent(item.id)}?kind=${item.kind}`);
+    } else {
+      playTrack(item);
     }
   };
 
@@ -72,6 +102,9 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         currentTrack,
         isPlaying,
         playTrack,
+        openItem,
+        error,
+        setError,
         togglePlay,
         audioRef,
         volume,
@@ -87,6 +120,11 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         onTimeUpdate={() => setProgress(audioRef.current?.currentTime || 0)}
         onLoadedMetadata={() => setDuration(audioRef.current?.duration || 0)}
         onEnded={() => setIsPlaying(false)}
+        onError={() => {
+          if (!audioRef.current?.src) return;
+          setIsPlaying(false);
+          setError('Dieser Titel konnte nicht geladen werden (evtl. ein Video oder nicht verfügbar).');
+        }}
       />
     </PlayerContext.Provider>
   );
